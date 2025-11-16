@@ -6,9 +6,9 @@ const searchInput = document.getElementById('searchInput');
 
 let allUsers = []; // tüm kullanıcıları saklayacağız
 
-// Spinner HTML
-const showLoader = () => {
-    userList.innerHTML = `
+// Spinner gösterme fonksiyonu (tekrar kullanılabilir)
+const showLoader = (container) => {
+    container.innerHTML = `
         <div class="d-flex justify-content-center align-items-center p-5">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Yükleniyor...</span>
@@ -38,9 +38,15 @@ const renderUsers = (users) => {
 
 // Kullanıcı detaylarını modal ile göster
 const showUserDetails = async (userId) => {
+    showLoader(modalBody); // Spinner göster
+    userModal.show();       // Modal hemen açılır
+
     try {
         const response = await fetch(`https://jsonplaceholder.typicode.com/users/${userId}`);
         const user = await response.json();
+
+        // Küçük gecikme (200ms)
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         modalBody.innerHTML = `
             <p><strong>Ad:</strong> ${user.name}</p>
@@ -51,15 +57,17 @@ const showUserDetails = async (userId) => {
             <p><strong>Şirket:</strong> ${user.company.name}</p>
             <p><strong>Adres:</strong> ${user.address.street}, ${user.address.city}</p>
         `;
-
-        userModal.show();
     } catch (error) {
+        modalBody.innerHTML = `<p class="text-danger">Kullanıcı detayları yüklenemedi!</p>`;
         console.error('Kullanıcı detayları yüklenirken hata oluştu:', error);
     }
 };
 
+
 // Filtreleme işlemi
-const filterUsers = (query) => {
+const filterUsers = async (query) => {
+    showLoader(userList); // Filtreleme sırasında spinner göster
+    await new Promise(resolve => setTimeout(resolve, 300)); // Küçük gecikme efekti
     const filtered = allUsers.filter(user =>
         user.name.toLowerCase().includes(query.toLowerCase())
     );
@@ -68,14 +76,14 @@ const filterUsers = (query) => {
 
 // Sayfa yüklendiğinde kullanıcıları getir
 const loadUsers = async () => {
-    showLoader(); // 👈 önce spinner göster
+    showLoader(userList); // Başlangıç spinner
     try {
         const response = await fetch('https://jsonplaceholder.typicode.com/users');
         allUsers = await response.json();
-        renderUsers(allUsers); // 👈 spinner yerine kullanıcıları render et
+        renderUsers(allUsers);
     } catch (error) {
-        console.error('Kullanıcılar yüklenirken hata oluştu:', error);
         userList.innerHTML = `<li class="list-group-item text-center text-danger">Kullanıcılar yüklenemedi!</li>`;
+        console.error('Kullanıcılar yüklenirken hata oluştu:', error);
     }
 };
 
