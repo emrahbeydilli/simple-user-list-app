@@ -2,12 +2,28 @@
 const userList = document.getElementById('userList');
 const modalBody = document.getElementById('modalBody');
 const userModal = new bootstrap.Modal(document.getElementById('userModal'));
-const searchInput = document.getElementById('searchInput'); // 👈 yeni eklenen input
+const searchInput = document.getElementById('searchInput');
 
-let allUsers = []; // 👈 tüm kullanıcıları saklayacağız
+let allUsers = []; // tüm kullanıcıları saklayacağız
+
+// Spinner HTML
+const showLoader = () => {
+    userList.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center p-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+            </div>
+        </div>
+    `;
+};
 
 // Kullanıcıları listele
 const renderUsers = (users) => {
+    if (users.length === 0) {
+        userList.innerHTML = `<li class="list-group-item text-center">Kullanıcı bulunamadı.</li>`;
+        return;
+    }
+
     userList.innerHTML = '';
     users.forEach(user => {
         const li = document.createElement('li');
@@ -52,12 +68,14 @@ const filterUsers = (query) => {
 
 // Sayfa yüklendiğinde kullanıcıları getir
 const loadUsers = async () => {
+    showLoader(); // 👈 önce spinner göster
     try {
         const response = await fetch('https://jsonplaceholder.typicode.com/users');
-        allUsers = await response.json(); // 👈 orijinal diziyi saklıyoruz
-        renderUsers(allUsers);
+        allUsers = await response.json();
+        renderUsers(allUsers); // 👈 spinner yerine kullanıcıları render et
     } catch (error) {
         console.error('Kullanıcılar yüklenirken hata oluştu:', error);
+        userList.innerHTML = `<li class="list-group-item text-center text-danger">Kullanıcılar yüklenemedi!</li>`;
     }
 };
 
